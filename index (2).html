@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0F2540">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Oferta Líneas">
+<link rel="manifest" href="manifest.json">
+<title>Oferta Líneas</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { background:#0F2540; font-family:'Nunito',sans-serif; min-height:100vh; padding-bottom:2rem; }
+
+/* HEADER */
+.topbar {
+  background:#FFD740;
+  padding:1rem 1.2rem 0.8rem;
+  display:flex;
+  align-items:center;
+  gap:0.7rem;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.topbar-icon { font-size:1.5rem; }
+.topbar-title { font-size:1.1rem; font-weight:900; color:#0F2540; }
+.topbar-sub { font-size:0.7rem; color:rgba(15,37,64,0.6); font-weight:700; }
+
+/* CARDS */
+.wrap { padding:1rem; display:flex; flex-direction:column; gap:0.8rem; }
+.card { background:rgba(255,255,255,0.06); border:1px solid rgba(255,215,64,0.15); border-radius:16px; padding:1.1rem; }
+.card-title { font-size:0.62rem; font-weight:900; letter-spacing:3px; text-transform:uppercase; color:rgba(255,215,64,0.6); margin-bottom:0.9rem; }
+
+/* INPUTS */
+label { display:block; font-size:0.82rem; font-weight:700; color:rgba(255,255,255,0.7); margin-bottom:0.3rem; }
+input[type=text], input[type=number], input[type=url], textarea, select {
+  width:100%; padding:0.75rem 1rem;
+  background:rgba(255,255,255,0.08);
+  border:1.5px solid rgba(255,215,64,0.2);
+  border-radius:12px;
+  color:#fff;
+  font-family:'Nunito',sans-serif;
+  font-size:0.95rem;
+  margin-bottom:0.9rem;
+  transition:border 0.2s;
+  -webkit-appearance:none;
+}
+input:focus, textarea:focus { outline:none; border-color:#FFD740; background:rgba(255,255,255,0.12); }
+input::placeholder, textarea::placeholder { color:rgba(255,255,255,0.3); }
+textarea { resize:none; min-height:75px; }
+
+.row { display:flex; gap:0.5rem; align-items:flex-start; }
+.prefix { font-size:1.8rem; font-weight:900; color:#FFD740; padding-top:0.5rem; }
+
+/* MEDIA TABS */
+.media-tabs { display:flex; gap:0.5rem; margin-bottom:0.9rem; }
+.mtab {
+  flex:1; padding:0.55rem; border:1.5px solid rgba(255,215,64,0.2);
+  border-radius:10px; background:transparent; color:rgba(255,255,255,0.5);
+  font-family:'Nunito',sans-serif; font-weight:700; font-size:0.82rem;
+  cursor:pointer; transition:all 0.2s; text-align:center;
+}
+.mtab.on { background:#FFD740; color:#0F2540; border-color:#FFD740; }
+
+.media-panel { display:none; }
+.media-panel.on { display:block; }
+
+/* FILE UPLOAD */
+.upload-area {
+  border:2px dashed rgba(255,215,64,0.3);
+  border-radius:12px;
+  padding:1.5rem;
+  text-align:center;
+  cursor:pointer;
+  transition:all 0.2s;
+  margin-bottom:0.9rem;
+  position:relative;
+}
+.upload-area:hover, .upload-area.drag { border-color:#FFD740; background:rgba(255,215,64,0.05); }
+.upload-area input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.upload-icon { font-size:2rem; margin-bottom:0.4rem; }
+.upload-text { font-size:0.8rem; color:rgba(255,255,255,0.5); font-weight:700; }
+.upload-hint { font-size:0.7rem; color:rgba(255,255,255,0.3); margin-top:0.3rem; }
+
+.media-preview { width:100%; border-radius:10px; margin-bottom:0.9rem; display:none; max-height:180px; object-fit:cover; }
+.media-preview.on { display:block; }
+.video-preview { width:100%; border-radius:10px; margin-bottom:0.9rem; display:none; max-height:180px; }
+.video-preview.on { display:block; }
+.remove-media { background:rgba(255,80,80,0.15); border:1px solid rgba(255,80,80,0.3); color:#ff8080; font-family:'Nunito',sans-serif; font-weight:700; font-size:0.78rem; padding:0.4rem 1rem; border-radius:100px; cursor:pointer; margin-bottom:0.9rem; display:none; }
+.remove-media.on { display:inline-block; }
+
+/* NOTA localStorage */
+.ls-note { font-size:0.72rem; color:rgba(255,215,64,0.6); font-weight:700; margin-top:-0.5rem; margin-bottom:0.7rem; line-height:1.4; }
+
+/* DURACIÓN */
+.dur-btns { display:flex; gap:0.4rem; flex-wrap:wrap; }
+.dur-btn {
+  padding:0.5rem 0.9rem; border:1.5px solid rgba(255,215,64,0.2);
+  border-radius:100px; background:transparent; color:rgba(255,255,255,0.5);
+  font-family:'Nunito',sans-serif; font-weight:700; font-size:0.82rem;
+  cursor:pointer; transition:all 0.15s;
+}
+.dur-btn.on { background:#FFD740; color:#0F2540; border-color:#FFD740; }
+
+/* TOGGLE */
+.tog-row { display:flex; align-items:center; gap:0.8rem; }
+.tog { position:relative; width:46px; height:25px; flex-shrink:0; }
+.tog input { opacity:0; width:0; height:0; }
+.tog-sl { position:absolute; inset:0; background:rgba(255,255,255,0.15); border-radius:25px; cursor:pointer; transition:0.25s; }
+.tog-sl:before { content:''; position:absolute; width:19px; height:19px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:0.25s; }
+input:checked + .tog-sl { background:#25D366; }
+input:checked + .tog-sl:before { transform:translateX(21px); }
+.tog-lbl { font-size:0.9rem; font-weight:700; color:#fff; }
+
+/* LINK */
+.link-box {
+  background:rgba(255,255,255,0.05);
+  border:1.5px solid rgba(255,215,64,0.2);
+  border-radius:12px;
+  padding:0.9rem 1rem;
+  font-size:0.78rem;
+  color:rgba(255,255,255,0.6);
+  word-break:break-all;
+  line-height:1.5;
+  min-height:60px;
+}
+.link-box strong { display:block; font-size:0.6rem; letter-spacing:2px; text-transform:uppercase; color:rgba(255,215,64,0.5); margin-bottom:0.4rem; }
+
+/* BUTTONS */
+.btn-row { display:flex; gap:0.6rem; margin-top:0.3rem; }
+.btn {
+  flex:1; padding:0.8rem; border:none; border-radius:100px;
+  font-family:'Nunito',sans-serif; font-weight:900; font-size:0.9rem;
+  cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:0.4rem;
+}
+.btn-copy { background:rgba(255,215,64,0.15); color:#FFD740; border:1.5px solid rgba(255,215,64,0.3); }
+.btn-copy:active { background:#FFD740; color:#0F2540; }
+.btn-copy.ok { background:#25D366; color:#fff; border-color:#25D366; }
+
+.btn-main { background:#FFD740; color:#0F2540; }
+.btn-main:active { background:#f0c800; transform:scale(0.98); }
+
+.btn-wa { background:#25D366; color:#fff; }
+.btn-wa:active { background:#1db954; transform:scale(0.98); }
+
+/* INSTALL BANNER */
+.install-banner {
+  background:rgba(255,215,64,0.1);
+  border:1.5px solid rgba(255,215,64,0.3);
+  border-radius:14px;
+  padding:1rem;
+  margin-bottom:0.8rem;
+  display:flex;
+  align-items:center;
+  gap:0.8rem;
+}
+.install-banner.hidden { display:none !important; }
+.install-icon { font-size:1.8rem; flex-shrink:0; }
+.install-text { flex:1; font-size:0.8rem; color:rgba(255,255,255,0.8); font-weight:700; line-height:1.4; }
+.btn-install { background:#FFD740; color:#0F2540; border:none; border-radius:100px; padding:0.5rem 1.1rem; font-family:'Nunito',sans-serif; font-weight:900; font-size:0.82rem; cursor:pointer; white-space:nowrap; }
+
+/* ===================== OFERTA VIEW ===================== */
+#ofertaView { display:none; }
+#editorView { display:block; }
+
+.oferta-wrap {
+  max-width:480px;
+  margin:0 auto;
+  background:#fff;
+  min-height:100vh;
+  font-family:'Nunito',sans-serif;
+}
+.oferta-header {
+  background:#FFD740;
+  padding:0.8rem 1.2rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.oferta-header-brand { font-size:0.85rem; font-weight:900; color:#0F2540; text-transform:uppercase; letter-spacing:1px; }
+.oferta-badge { background:#0F2540; color:#FFD740; font-size:0.65rem; font-weight:900; letter-spacing:2px; text-transform:uppercase; padding:0.3rem 0.7rem; border-radius:100px; }
+.oferta-media { width:100%; max-height:260px; object-fit:cover; display:block; background:#f0f0f0; }
+.oferta-media-vid { width:100%; max-height:260px; display:block; background:#000; }
+.oferta-body { padding:1.2rem 1.2rem 0.5rem; }
+.oferta-solo { font-size:0.72rem; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:#888; margin-bottom:0.3rem; }
+.oferta-titulo { font-size:1.5rem; font-weight:900; color:#0F2540; line-height:1.2; margin-bottom:0.6rem; text-transform:uppercase; }
+.oferta-precio { font-size:2.4rem; font-weight:900; color:#e8a000; line-height:1; margin-bottom:0.7rem; }
+.oferta-desc { font-size:0.88rem; color:#555; font-weight:700; line-height:1.5; margin-bottom:1rem; }
+.oferta-pausa { background:#fff3cd; border:1.5px solid #ffc107; border-radius:10px; padding:0.7rem 1rem; text-align:center; font-size:0.85rem; font-weight:900; color:#856404; margin:0 1.2rem 1rem; }
+
+/* Countdown */
+.oferta-countdown-lbl { font-size:0.6rem; font-weight:900; letter-spacing:3px; text-transform:uppercase; color:#888; padding:0 1.2rem; margin-bottom:0.5rem; }
+.oferta-countdown { display:flex; gap:0.5rem; padding:0 1.2rem 1.2rem; }
+.cnt-box { flex:1; background:#0F2540; border-radius:10px; padding:0.7rem 0.3rem; text-align:center; }
+.cnt-num { font-size:1.8rem; font-weight:900; color:#FFD740; line-height:1; }
+.cnt-lbl { font-size:0.6rem; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.5); margin-top:0.2rem; }
+
+/* CTA */
+.oferta-cta {
+  margin:0 1.2rem 1.2rem;
+  background:#25D366;
+  color:#fff;
+  border:none;
+  border-radius:100px;
+  padding:1rem;
+  width:calc(100% - 2.4rem);
+  font-family:'Nunito',sans-serif;
+  font-weight:900;
+  font-size:1rem;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:0.5rem;
+  text-decoration:none;
+}
+.oferta-expired { background:#f5f5f5; color:#999; border-radius:10px; padding:1rem; text-align:center; font-size:0.9rem; font-weight:900; margin:0 1.2rem 1.2rem; }
+</style>
+</head>
+<body>
+
+<!-- ============ EDITOR ============ -->
+<div id="editorView">
+<div class="topbar">
+  <div class="topbar-icon">🔥</div>
+  <div>
+    <div class="topbar-title">Editor de Oferta</div>
+    <div class="topbar-sub">Líneas Fotocopias</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="install-banner hidden" id="installBanner">
+    <div class="install-icon">📲</div>
+    <div class="install-text">Instalá esta app en tu pantalla de inicio para acceso rápido</div>
+    <button class="btn-install" id="btnInstall">Instalar</button>
+  </div>
+
+  <!-- ESTADO -->
+  <div class="card">
+    <div class="card-title">Estado</div>
+    <div class="tog-row">
+      <label class="tog"><input type="checkbox" id="activa" checked><span class="tog-sl"></span></label>
+      <span class="tog-lbl" id="estadoLbl">Oferta ACTIVA ✅</span>
+    </div>
+  </div>
+
+  <!-- CONTENIDO -->
+  <div class="card">
+    <div class="card-title">Contenido</div>
+    <label>Servicio</label>
+    <input id="servicio" type="text" placeholder="ej: Fotocopias, Anillados...">
+    <label>Precio especial</label>
+    <div class="row"><span class="prefix">$</span><input id="precio" type="number" placeholder="ej: 75"></div>
+    <label>Descripción</label>
+    <textarea id="desc" placeholder="ej: Válido hoy. Mandá tus archivos por WhatsApp."></textarea>
+  </div>
+
+  <!-- MEDIA -->
+  <div class="card">
+    <div class="card-title">Imagen o Video</div>
+    <div class="media-tabs">
+      <button class="mtab on" onclick="switchMedia(this,'img')">🖼️ Imagen</button>
+      <button class="mtab" onclick="switchMedia(this,'vid')">🎬 Video</button>
+      <button class="mtab" onclick="switchMedia(this,'url')">🔗 URL</button>
+      <button class="mtab" onclick="switchMedia(this,'none')">✕ Sin media</button>
+    </div>
+
+    <!-- IMAGEN UPLOAD -->
+    <div class="media-panel on" id="panel-img">
+      <div class="upload-area" id="uploadAreaImg">
+        <input type="file" accept="image/*" id="fileImg" onchange="handleImg(this)">
+        <div class="upload-icon">🖼️</div>
+        <div class="upload-text">Tocá para elegir una foto</div>
+        <div class="upload-hint">JPG, PNG, WebP</div>
+      </div>
+      <img class="media-preview" id="imgPreview" src="" alt="">
+      <button class="remove-media" id="removeImg" onclick="removeMedia('img')">✕ Quitar imagen</button>
+      <p class="ls-note">📱 La imagen se guarda en este dispositivo y se ve al abrir el link aquí.</p>
+    </div>
+
+    <!-- VIDEO UPLOAD -->
+    <div class="media-panel" id="panel-vid">
+      <div class="upload-area" id="uploadAreaVid">
+        <input type="file" accept="video/*" id="fileVid" onchange="handleVid(this)">
+        <div class="upload-icon">🎬</div>
+        <div class="upload-text">Tocá para elegir un video</div>
+        <div class="upload-hint">MP4, MOV, WebM · máx 50MB</div>
+      </div>
+      <video class="video-preview" id="vidPreview" controls></video>
+      <button class="remove-media" id="removeVid" onclick="removeMedia('vid')">✕ Quitar video</button>
+      <p class="ls-note">📱 El video se guarda en este dispositivo y se ve al abrir el link aquí.</p>
+    </div>
+
+    <!-- URL -->
+    <div class="media-panel" id="panel-url">
+      <label>URL de imagen o video</label>
+      <input id="mediaUrl" type="url" placeholder="https://...">
+    </div>
+
+    <!-- SIN MEDIA -->
+    <div class="media-panel" id="panel-none">
+      <p style="color:rgba(255,255,255,0.4);font-size:0.85rem;font-weight:700">La oferta se mostrará sin imagen ni video.</p>
+    </div>
+  </div>
+
+  <!-- DURACIÓN -->
+  <div class="card">
+    <div class="card-title">Duración</div>
+    <div class="dur-btns">
+      <button class="dur-btn on" onclick="setDur(this,6)">6 hs</button>
+      <button class="dur-btn" onclick="setDur(this,12)">12 hs</button>
+      <button class="dur-btn" onclick="setDur(this,24)">24 hs</button>
+      <button class="dur-btn" onclick="setDur(this,48)">2 días</button>
+      <button class="dur-btn" onclick="setDur(this,168)">1 semana</button>
+    </div>
+  </div>
+
+  <!-- LINK -->
+  <div class="card">
+    <div class="card-title">Link para compartir</div>
+    <div class="link-box" id="linkBox">
+      <strong>Tu link</strong>
+      <span id="linkText">Completá los datos arriba</span>
+    </div>
+    <div class="btn-row" style="margin-top:0.7rem">
+      <button class="btn btn-copy" id="btnCopy" onclick="copiarLink()">📋 Copiar</button>
+      <button class="btn btn-main" onclick="verOferta()">👁️ Ver</button>
+    </div>
+  </div>
+
+  <!-- COMPARTIR -->
+  <button class="btn btn-wa" style="width:100%;padding:1rem;font-size:1rem" onclick="compartirWA()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.555 4.126 1.526 5.858L0 24l6.335-1.502A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.371l-.36-.214-3.727.977.994-3.634-.235-.374A9.818 9.818 0 1112 21.818z"/></svg>
+    Compartir por WhatsApp
+  </button>
+
+</div>
+</div><!-- /editorView -->
+
+<!-- ============ OFERTA VIEW ============ -->
+<div id="ofertaView">
+  <div class="oferta-wrap">
+    <div class="oferta-header">
+      <div class="oferta-header-brand">Líneas Fotocopias</div>
+      <div class="oferta-badge" id="ofBadge">OFERTA DEL DÍA</div>
+    </div>
+    <div id="ofMediaWrap"></div>
+    <div class="oferta-body">
+      <div class="oferta-solo" id="ofSolo">SOLO POR HOY</div>
+      <div class="oferta-titulo" id="ofTitulo"></div>
+      <div class="oferta-precio" id="ofPrecio"></div>
+      <div class="oferta-desc" id="ofDesc"></div>
+    </div>
+    <div id="ofPausaWrap"></div>
+    <div class="oferta-countdown-lbl">LA OFERTA VENCE EN</div>
+    <div class="oferta-countdown">
+      <div class="cnt-box"><div class="cnt-num" id="cntH">00</div><div class="cnt-lbl">Horas</div></div>
+      <div class="cnt-box"><div class="cnt-num" id="cntM">00</div><div class="cnt-lbl">Min</div></div>
+      <div class="cnt-box"><div class="cnt-num" id="cntS">00</div><div class="cnt-lbl">Seg</div></div>
+    </div>
+    <div id="ofCtaWrap"></div>
+  </div>
+</div>
+
+<script>
+// ===================== ROUTING =====================
+const params = new URLSearchParams(location.search);
+const isOferta = params.has('titulo') || params.has('precio');
+
+if (isOferta) {
+  document.getElementById('editorView').style.display = 'none';
+  document.getElementById('ofertaView').style.display = 'block';
+  document.body.style.background = '#f5f5f5';
+  loadOferta();
+} else {
+  initEditor();
+}
+
+// ===================== OFERTA VIEW =====================
+function loadOferta() {
+  const titulo = params.get('titulo') || '';
+  const precio = params.get('precio') || '';
+  const desc = params.get('desc') || '';
+  const hs = parseInt(params.get('hs') || '6');
+  const activa = params.get('activa') !== '0';
+  const imgParam = params.get('img') || '';
+  const vidParam = params.get('vid') || '';
+
+  document.getElementById('ofTitulo').textContent = titulo;
+  document.getElementById('ofPrecio').textContent = precio ? '$' + precio : '';
+  document.getElementById('ofDesc').textContent = desc;
+
+  // Badge
+  if (!activa) {
+    document.getElementById('ofBadge').textContent = 'PAUSADA';
+    document.getElementById('ofBadge').style.background = '#666';
+    document.getElementById('ofSolo').textContent = 'OFERTA PAUSADA';
+    const pw = document.getElementById('ofPausaWrap');
+    pw.innerHTML = '<div class="oferta-pausa">⏸ Esta oferta está pausada por el momento</div>';
+  }
+
+  // Media
+  const mw = document.getElementById('ofMediaWrap');
+  if (imgParam) {
+    // Check if it's a localStorage key
+    let src = imgParam;
+    if (imgParam.startsWith('LS:')) {
+      const key = imgParam.slice(3);
+      src = localStorage.getItem('oferta_media_' + key) || '';
+    }
+    if (src) {
+      mw.innerHTML = '<img class="oferta-media" src="' + src + '" alt="">';
+    }
+  } else if (vidParam) {
+    let src = vidParam;
+    if (vidParam.startsWith('LS:')) {
+      const key = vidParam.slice(3);
+      src = localStorage.getItem('oferta_media_' + key) || '';
+    }
+    if (src) {
+      mw.innerHTML = '<video class="oferta-media-vid" src="' + src + '" autoplay muted loop playsinline></video>';
+    }
+  }
+
+  // CTA
+  const cw = document.getElementById('ofCtaWrap');
+  if (activa) {
+    cw.innerHTML = '<a class="oferta-cta" href="https://wa.me/543482213967"><svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.555 4.126 1.526 5.858L0 24l6.335-1.502A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.371l-.36-.214-3.727.977.994-3.634-.235-.374A9.818 9.818 0 1112 21.818z"/></svg> Quiero esta oferta — 3482 213967</a>';
+  } else {
+    cw.innerHTML = '<div class="oferta-expired">Esta oferta no está disponible en este momento</div>';
+  }
+
+  // Countdown
+  startCountdown(hs);
+}
+
+function startCountdown(hs) {
+  // Store end time in localStorage so countdown persists on reload
+  const storageKey = 'oferta_end_' + location.search;
+  let endTime = parseInt(localStorage.getItem(storageKey) || '0');
+  const now = Date.now();
+  if (!endTime || endTime < now) {
+    endTime = now + hs * 3600 * 1000;
+    localStorage.setItem(storageKey, endTime);
+  }
+
+  function tick() {
+    const remaining = endTime - Date.now();
+    if (remaining <= 0) {
+      document.getElementById('cntH').textContent = '00';
+      document.getElementById('cntM').textContent = '00';
+      document.getElementById('cntS').textContent = '00';
+      return;
+    }
+    const h = Math.floor(remaining / 3600000);
+    const m = Math.floor((remaining % 3600000) / 60000);
+    const s = Math.floor((remaining % 60000) / 1000);
+    document.getElementById('cntH').textContent = String(h).padStart(2,'0');
+    document.getElementById('cntM').textContent = String(m).padStart(2,'0');
+    document.getElementById('cntS').textContent = String(s).padStart(2,'0');
+    setTimeout(tick, 1000);
+  }
+  tick();
+}
+
+// ===================== EDITOR =====================
+function initEditor() {
+  ['servicio','precio','desc','mediaUrl'].forEach(id => {
+    document.getElementById(id).addEventListener('input', genLink);
+  });
+  document.getElementById('activa').addEventListener('change', function() {
+    document.getElementById('estadoLbl').textContent = this.checked ? 'Oferta ACTIVA ✅' : 'Oferta PAUSADA ⏸';
+    genLink();
+  });
+  genLink();
+
+  // PWA Install
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('installBanner').classList.remove('hidden');
+  });
+  document.getElementById('btnInstall').addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') document.getElementById('installBanner').classList.add('hidden');
+    deferredPrompt = null;
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+}
+
+const BASE = location.origin + location.pathname;
+let durHoras = 6;
+let mediaType = 'img';
+let currentMediaKey = '';
+
+function switchMedia(btn, type) {
+  document.querySelectorAll('.mtab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.media-panel').forEach(p => p.classList.remove('on'));
+  document.getElementById('panel-' + type).classList.add('on');
+  mediaType = type;
+  genLink();
+}
+
+function handleImg(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const data = e.target.result;
+    // Save to localStorage with a key
+    currentMediaKey = 'img_' + Date.now();
+    try {
+      localStorage.setItem('oferta_media_' + currentMediaKey, data);
+    } catch(ex) {
+      alert('La imagen es muy grande para guardar. Usá una imagen más chica o la opción URL.');
+      return;
+    }
+    const prev = document.getElementById('imgPreview');
+    prev.src = data;
+    prev.classList.add('on');
+    document.getElementById('removeImg').classList.add('on');
+    document.getElementById('uploadAreaImg').style.display = 'none';
+    genLink();
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleVid(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 50 * 1024 * 1024) { alert('El video es muy grande. Máximo 50MB.'); return; }
+  const url = URL.createObjectURL(file);
+  const prev = document.getElementById('vidPreview');
+  prev.src = url;
+  prev.classList.add('on');
+  document.getElementById('removeVid').classList.add('on');
+  document.getElementById('uploadAreaVid').style.display = 'none';
+  const reader = new FileReader();
+  reader.onload = e => {
+    const data = e.target.result;
+    currentMediaKey = 'vid_' + Date.now();
+    try {
+      localStorage.setItem('oferta_media_' + currentMediaKey, data);
+    } catch(ex) {
+      alert('El video es muy grande para guardar localmente.');
+      return;
+    }
+    genLink();
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeMedia(type) {
+  if (currentMediaKey) {
+    localStorage.removeItem('oferta_media_' + currentMediaKey);
+    currentMediaKey = '';
+  }
+  if (type === 'img') {
+    document.getElementById('imgPreview').classList.remove('on');
+    document.getElementById('removeImg').classList.remove('on');
+    document.getElementById('uploadAreaImg').style.display = 'block';
+    document.getElementById('fileImg').value = '';
+  } else {
+    document.getElementById('vidPreview').classList.remove('on');
+    document.getElementById('removeVid').classList.remove('on');
+    document.getElementById('uploadAreaVid').style.display = 'block';
+    document.getElementById('fileVid').value = '';
+  }
+  genLink();
+}
+
+function setDur(btn, h) {
+  document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  durHoras = h;
+  genLink();
+}
+
+function genLink() {
+  const svc = document.getElementById('servicio').value.trim();
+  const pre = document.getElementById('precio').value.trim();
+  if (!svc && !pre) { document.getElementById('linkText').textContent = 'Completá los datos arriba'; return; }
+  const p = new URLSearchParams();
+  if (svc) p.set('titulo', svc);
+  if (pre) p.set('precio', pre);
+  const desc = document.getElementById('desc').value.trim();
+  if (desc) p.set('desc', desc);
+  // Media — usar clave localStorage en lugar de base64
+  if (mediaType === 'url') {
+    const url = document.getElementById('mediaUrl').value.trim();
+    if (url) p.set('img', url);
+  } else if ((mediaType === 'img' || mediaType === 'vid') && currentMediaKey) {
+    const paramName = currentMediaKey.startsWith('vid_') ? 'vid' : 'img';
+    p.set(paramName, 'LS:' + currentMediaKey);
+  }
+  p.set('hs', durHoras);
+  p.set('activa', document.getElementById('activa').checked ? '1' : '0');
+  const link = BASE + '?' + p.toString();
+  document.getElementById('linkText').textContent = link.length > 120 ? link.substring(0,120) + '...' : link;
+  document.getElementById('linkText').dataset.full = link;
+}
+
+function getFullLink() {
+  return document.getElementById('linkText').dataset.full || document.getElementById('linkText').textContent;
+}
+
+function copiarLink() {
+  const link = getFullLink();
+  if (!link || link === 'Completá los datos arriba') return;
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.getElementById('btnCopy');
+    btn.textContent = '✅ Copiado!';
+    btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = '📋 Copiar'; btn.classList.remove('ok'); }, 2000);
+  });
+}
+
+function verOferta() {
+  const link = getFullLink();
+  if (!link || link === 'Completá los datos arriba') { alert('Completá servicio y precio'); return; }
+  window.open(link, '_blank');
+}
+
+function compartirWA() {
+  const link = getFullLink();
+  if (!link || link === 'Completá los datos arriba') { alert('Completá servicio y precio'); return; }
+  const svc = document.getElementById('servicio').value || 'Oferta';
+  const pre = document.getElementById('precio').value || '';
+  const msg = '🔥 *OFERTA DEL DÍA — Líneas Fotocopias*\n' + svc + (pre ? ' a $' + pre : '') + ' ⏳\n👉 ' + link;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+</script>
+</body>
+</html>
