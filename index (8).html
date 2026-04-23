@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0F2540">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Oferta Líneas">
+<link rel="manifest" href="manifest.json">
+<title>Oferta Líneas</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { background:#0F2540; font-family:'Nunito',sans-serif; min-height:100vh; padding-bottom:2rem; }
+
+/* HEADER */
+.topbar {
+  background:#FFD740;
+  padding:1rem 1.2rem 0.8rem;
+  display:flex;
+  align-items:center;
+  gap:0.7rem;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.topbar-icon { font-size:1.5rem; }
+.topbar-title { font-size:1.1rem; font-weight:900; color:#0F2540; }
+.topbar-sub { font-size:0.7rem; color:rgba(15,37,64,0.6); font-weight:700; }
+
+/* CARDS */
+.wrap { padding:1rem; display:flex; flex-direction:column; gap:0.8rem; }
+.card { background:rgba(255,255,255,0.06); border:1px solid rgba(255,215,64,0.15); border-radius:16px; padding:1.1rem; }
+.card-title { font-size:0.62rem; font-weight:900; letter-spacing:3px; text-transform:uppercase; color:rgba(255,215,64,0.6); margin-bottom:0.9rem; }
+
+/* INPUTS */
+label { display:block; font-size:0.82rem; font-weight:700; color:rgba(255,255,255,0.7); margin-bottom:0.3rem; }
+input[type=text], input[type=number], input[type=url], textarea, select {
+  width:100%; padding:0.75rem 1rem;
+  background:rgba(255,255,255,0.08);
+  border:1.5px solid rgba(255,215,64,0.2);
+  border-radius:12px;
+  color:#fff;
+  font-family:'Nunito',sans-serif;
+  font-size:0.95rem;
+  margin-bottom:0.9rem;
+  transition:border 0.2s;
+  -webkit-appearance:none;
+}
+input:focus, textarea:focus { outline:none; border-color:#FFD740; background:rgba(255,255,255,0.12); }
+input::placeholder, textarea::placeholder { color:rgba(255,255,255,0.3); }
+textarea { resize:none; min-height:75px; }
+
+.row { display:flex; gap:0.5rem; align-items:flex-start; }
+.prefix { font-size:1.8rem; font-weight:900; color:#FFD740; padding-top:0.5rem; }
+
+/* MEDIA TABS */
+.media-tabs { display:flex; gap:0.5rem; margin-bottom:0.9rem; }
+.mtab {
+  flex:1; padding:0.55rem; border:1.5px solid rgba(255,215,64,0.2);
+  border-radius:10px; background:transparent; color:rgba(255,255,255,0.5);
+  font-family:'Nunito',sans-serif; font-weight:700; font-size:0.82rem;
+  cursor:pointer; transition:all 0.2s; text-align:center;
+}
+.mtab.on { background:#FFD740; color:#0F2540; border-color:#FFD740; }
+
+.media-panel { display:none; }
+.media-panel.on { display:block; }
+
+/* FILE UPLOAD */
+.upload-area {
+  border:2px dashed rgba(255,215,64,0.3);
+  border-radius:12px;
+  padding:1.5rem;
+  text-align:center;
+  cursor:pointer;
+  transition:all 0.2s;
+  margin-bottom:0.9rem;
+  position:relative;
+}
+.upload-area:hover, .upload-area.drag { border-color:#FFD740; background:rgba(255,215,64,0.05); }
+.upload-area input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.upload-icon { font-size:2rem; margin-bottom:0.4rem; }
+.upload-text { font-size:0.8rem; color:rgba(255,255,255,0.5); font-weight:700; }
+.upload-hint { font-size:0.7rem; color:rgba(255,255,255,0.3); margin-top:0.3rem; }
+
+.media-preview { width:100%; border-radius:10px; margin-bottom:0.9rem; display:none; max-height:180px; object-fit:cover; }
+.media-preview.on { display:block; }
+.video-preview { width:100%; border-radius:10px; margin-bottom:0.9rem; display:none; max-height:180px; }
+.video-preview.on { display:block; }
+.remove-media { background:rgba(255,80,80,0.15); border:1px solid rgba(255,80,80,0.3); color:#ff8080; font-family:'Nunito',sans-serif; font-weight:700; font-size:0.78rem; padding:0.4rem 1rem; border-radius:100px; cursor:pointer; margin-bottom:0.9rem; display:none; }
+.remove-media.on { display:inline-block; }
+
+/* DURACIÓN */
+.dur-btns { display:flex; gap:0.4rem; flex-wrap:wrap; }
+.dur-btn {
+  padding:0.5rem 0.9rem; border:1.5px solid rgba(255,215,64,0.2);
+  border-radius:100px; background:transparent; color:rgba(255,255,255,0.5);
+  font-family:'Nunito',sans-serif; font-weight:700; font-size:0.82rem;
+  cursor:pointer; transition:all 0.15s;
+}
+.dur-btn.on { background:#FFD740; color:#0F2540; border-color:#FFD740; }
+
+/* TOGGLE */
+.tog-row { display:flex; align-items:center; gap:0.8rem; }
+.tog { position:relative; width:46px; height:25px; flex-shrink:0; }
+.tog input { opacity:0; width:0; height:0; }
+.tog-sl { position:absolute; inset:0; background:rgba(255,255,255,0.15); border-radius:25px; cursor:pointer; transition:0.25s; }
+.tog-sl:before { content:''; position:absolute; width:19px; height:19px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:0.25s; }
+input:checked + .tog-sl { background:#25D366; }
+input:checked + .tog-sl:before { transform:translateX(21px); }
+.tog-lbl { font-size:0.9rem; font-weight:700; color:#fff; }
+
+/* LINK */
+.link-box {
+  background:rgba(255,255,255,0.05);
+  border:1.5px solid rgba(255,215,64,0.2);
+  border-radius:12px;
+  padding:0.9rem 1rem;
+  font-size:0.78rem;
+  color:rgba(255,255,255,0.6);
+  word-break:break-all;
+  line-height:1.5;
+  min-height:60px;
+}
+.link-box strong { display:block; font-size:0.6rem; letter-spacing:2px; text-transform:uppercase; color:rgba(255,215,64,0.5); margin-bottom:0.4rem; }
+
+/* BUTTONS */
+.btn-row { display:flex; gap:0.6rem; margin-top:0.3rem; }
+.btn {
+  flex:1; padding:0.8rem; border:none; border-radius:100px;
+  font-family:'Nunito',sans-serif; font-weight:900; font-size:0.9rem;
+  cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:0.4rem;
+}
+.btn-copy { background:rgba(255,215,64,0.15); color:#FFD740; border:1.5px solid rgba(255,215,64,0.3); }
+.btn-copy:active { background:#FFD740; color:#0F2540; }
+.btn-copy.ok { background:#25D366; color:#fff; border-color:#25D366; }
+
+.btn-main { background:#FFD740; color:#0F2540; }
+.btn-main:active { background:#f0c800; transform:scale(0.98); }
+
+.btn-wa { background:#25D366; color:#fff; }
+.btn-wa:active { background:#1db954; transform:scale(0.98); }
+
+/* INSTALL BANNER */
+.install-banner {
+  display:none;
+  background:rgba(255,215,64,0.1);
+  border:1.5px solid rgba(255,215,64,0.3);
+  border-radius:14px;
+  padding:1rem;
+  margin-bottom:0.8rem;
+  display:flex;
+  align-items:center;
+  gap:0.8rem;
+}
+.install-banner.hidden { display:none !important; }
+.install-icon { font-size:1.8rem; flex-shrink:0; }
+.install-text { flex:1; font-size:0.8rem; color:rgba(255,255,255,0.8); font-weight:700; line-height:1.4; }
+.btn-install { background:#FFD740; color:#0F2540; border:none; border-radius:100px; padding:0.5rem 1.1rem; font-family:'Nunito',sans-serif; font-weight:900; font-size:0.82rem; cursor:pointer; white-space:nowrap; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-icon">🔥</div>
+  <div>
+    <div class="topbar-title">Editor de Oferta</div>
+    <div class="topbar-sub">Líneas Fotocopias</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- INSTALAR APP -->
+  <div class="install-banner hidden" id="installBanner">
+    <div class="install-icon">📲</div>
+    <div class="install-text">Instalá esta app en tu pantalla de inicio para acceso rápido</div>
+    <button class="btn-install" id="btnInstall">Instalar</button>
+  </div>
+
+  <!-- ESTADO -->
+  <div class="card">
+    <div class="card-title">Estado</div>
+    <div class="tog-row">
+      <label class="tog"><input type="checkbox" id="activa" checked><span class="tog-sl"></span></label>
+      <span class="tog-lbl" id="estadoLbl">Oferta ACTIVA ✅</span>
+    </div>
+  </div>
+
+  <!-- CONTENIDO -->
+  <div class="card">
+    <div class="card-title">Contenido</div>
+    <label>Servicio</label>
+    <input id="servicio" type="text" placeholder="ej: Fotocopias, Anillados...">
+    <label>Precio especial</label>
+    <div class="row"><span class="prefix">$</span><input id="precio" type="number" placeholder="ej: 75"></div>
+    <label>Descripción</label>
+    <textarea id="desc" placeholder="ej: Válido hoy. Mandá tus archivos por WhatsApp."></textarea>
+  </div>
+
+  <!-- MEDIA -->
+  <div class="card">
+    <div class="card-title">Imagen o Video</div>
+    <div class="media-tabs">
+      <button class="mtab on" onclick="switchMedia(this,'img')">🖼️ Imagen</button>
+      <button class="mtab" onclick="switchMedia(this,'vid')">🎬 Video</button>
+      <button class="mtab" onclick="switchMedia(this,'url')">🔗 URL</button>
+      <button class="mtab" onclick="switchMedia(this,'none')">✕ Sin media</button>
+    </div>
+
+    <!-- IMAGEN UPLOAD -->
+    <div class="media-panel on" id="panel-img">
+      <div class="upload-area" id="uploadAreaImg">
+        <input type="file" accept="image/*" id="fileImg" onchange="handleImg(this)">
+        <div class="upload-icon">🖼️</div>
+        <div class="upload-text">Tocá para elegir una foto</div>
+        <div class="upload-hint">JPG, PNG, WebP</div>
+      </div>
+      <img class="media-preview" id="imgPreview" src="" alt="">
+      <button class="remove-media" id="removeImg" onclick="removeMedia('img')">✕ Quitar imagen</button>
+    </div>
+
+    <!-- VIDEO UPLOAD -->
+    <div class="media-panel" id="panel-vid">
+      <div class="upload-area" id="uploadAreaVid">
+        <input type="file" accept="video/*" id="fileVid" onchange="handleVid(this)">
+        <div class="upload-icon">🎬</div>
+        <div class="upload-text">Tocá para elegir un video</div>
+        <div class="upload-hint">MP4, MOV, WebM · máx 50MB</div>
+      </div>
+      <video class="video-preview" id="vidPreview" controls></video>
+      <button class="remove-media" id="removeVid" onclick="removeMedia('vid')">✕ Quitar video</button>
+    </div>
+
+    <!-- URL -->
+    <div class="media-panel" id="panel-url">
+      <label>URL de imagen o video</label>
+      <input id="mediaUrl" type="url" placeholder="https://...">
+    </div>
+
+    <!-- SIN MEDIA -->
+    <div class="media-panel" id="panel-none">
+      <p style="color:rgba(255,255,255,0.4);font-size:0.85rem;font-weight:700">La oferta se mostrará sin imagen ni video.</p>
+    </div>
+  </div>
+
+  <!-- DURACIÓN -->
+  <div class="card">
+    <div class="card-title">Duración</div>
+    <div class="dur-btns">
+      <button class="dur-btn on" onclick="setDur(this,6)">6 hs</button>
+      <button class="dur-btn" onclick="setDur(this,12)">12 hs</button>
+      <button class="dur-btn" onclick="setDur(this,24)">24 hs</button>
+      <button class="dur-btn" onclick="setDur(this,48)">2 días</button>
+      <button class="dur-btn" onclick="setDur(this,168)">1 semana</button>
+    </div>
+  </div>
+
+  <!-- LINK -->
+  <div class="card">
+    <div class="card-title">Link para compartir</div>
+    <div class="link-box" id="linkBox">
+      <strong>Tu link</strong>
+      <span id="linkText">Completá los datos arriba</span>
+    </div>
+    <div class="btn-row" style="margin-top:0.7rem">
+      <button class="btn btn-copy" id="btnCopy" onclick="copiarLink()">📋 Copiar</button>
+      <button class="btn btn-main" onclick="verOferta()">👁️ Ver</button>
+    </div>
+  </div>
+
+  <!-- COMPARTIR -->
+  <button class="btn btn-wa" style="width:100%;padding:1rem;font-size:1rem" onclick="compartirWA()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.555 4.126 1.526 5.858L0 24l6.335-1.502A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.371l-.36-.214-3.727.977.994-3.634-.235-.374A9.818 9.818 0 1112 21.818z"/></svg>
+    Compartir por WhatsApp
+  </button>
+
+</div>
+
+<script>
+const BASE = 'https://lineas-oferta.netlify.app/oferta.html';
+let durHoras = 6;
+let mediaType = 'img';
+let imgBase64 = '';
+let vidBase64 = '';
+
+// Media tabs
+function switchMedia(btn, type) {
+  document.querySelectorAll('.mtab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.media-panel').forEach(p => p.classList.remove('on'));
+  document.getElementById('panel-' + type).classList.add('on');
+  mediaType = type;
+  genLink();
+}
+
+// Handle image upload
+function handleImg(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    imgBase64 = e.target.result;
+    const prev = document.getElementById('imgPreview');
+    prev.src = imgBase64;
+    prev.classList.add('on');
+    document.getElementById('removeImg').classList.add('on');
+    document.getElementById('uploadAreaImg').style.display = 'none';
+    genLink();
+  };
+  reader.readAsDataURL(file);
+}
+
+// Handle video upload
+function handleVid(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 50 * 1024 * 1024) { alert('El video es muy grande. Máximo 50MB.'); return; }
+  const url = URL.createObjectURL(file);
+  const prev = document.getElementById('vidPreview');
+  prev.src = url;
+  prev.classList.add('on');
+  document.getElementById('removeVid').classList.add('on');
+  document.getElementById('uploadAreaVid').style.display = 'none';
+  // Store as base64 for URL param
+  const reader = new FileReader();
+  reader.onload = e => { vidBase64 = e.target.result; genLink(); };
+  reader.readAsDataURL(file);
+}
+
+function removeMedia(type) {
+  if (type === 'img') {
+    imgBase64 = '';
+    document.getElementById('imgPreview').classList.remove('on');
+    document.getElementById('removeImg').classList.remove('on');
+    document.getElementById('uploadAreaImg').style.display = 'block';
+    document.getElementById('fileImg').value = '';
+  } else {
+    vidBase64 = '';
+    document.getElementById('vidPreview').classList.remove('on');
+    document.getElementById('removeVid').classList.remove('on');
+    document.getElementById('uploadAreaVid').style.display = 'block';
+    document.getElementById('fileVid').value = '';
+  }
+  genLink();
+}
+
+// Duración
+function setDur(btn, h) {
+  document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  durHoras = h;
+  genLink();
+}
+
+// Toggle
+document.getElementById('activa').addEventListener('change', function() {
+  document.getElementById('estadoLbl').textContent = this.checked ? 'Oferta ACTIVA ✅' : 'Oferta PAUSADA ⏸';
+  genLink();
+});
+
+['servicio','precio','desc','mediaUrl'].forEach(id => {
+  document.getElementById(id).addEventListener('input', genLink);
+});
+
+function genLink() {
+  const svc = document.getElementById('servicio').value.trim();
+  const pre = document.getElementById('precio').value.trim();
+  if (!svc && !pre) { document.getElementById('linkText').textContent = 'Completá los datos arriba'; return; }
+  const p = new URLSearchParams();
+  if (svc) p.set('titulo', svc);
+  if (pre) p.set('precio', pre);
+  const desc = document.getElementById('desc').value.trim();
+  if (desc) p.set('desc', desc);
+  // Media
+  if (mediaType === 'url') {
+    const url = document.getElementById('mediaUrl').value.trim();
+    if (url) p.set('img', url);
+  } else if (mediaType === 'img' && imgBase64) {
+    p.set('img', imgBase64);
+  } else if (mediaType === 'vid' && vidBase64) {
+    p.set('vid', vidBase64);
+  }
+  p.set('hs', durHoras);
+  p.set('activa', document.getElementById('activa').checked ? '1' : '0');
+  const link = BASE + '?' + p.toString();
+  document.getElementById('linkText').textContent = link.length > 120 ? link.substring(0,120) + '...' : link;
+  document.getElementById('linkText').dataset.full = link;
+}
+
+function getFullLink() {
+  return document.getElementById('linkText').dataset.full || document.getElementById('linkText').textContent;
+}
+
+function copiarLink() {
+  const link = getFullLink();
+  if (!link || link === 'Completá los datos arriba') return;
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.getElementById('btnCopy');
+    btn.textContent = '✅ Copiado!';
+    btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = '📋 Copiar'; btn.classList.remove('ok'); }, 2000);
+  });
+}
+
+function verOferta() {
+  const link = getFullLink();
+  if (!link || link === 'Completá los datos arriba') { alert('Completá servicio y precio'); return; }
+  window.open(link, '_blank');
+}
+
+function compartirWA() {
+  const link = getFullLink();
+  if (!link || link === 'Completá los datos arriba') { alert('Completá servicio y precio'); return; }
+  const svc = document.getElementById('servicio').value || 'Oferta';
+  const pre = document.getElementById('precio').value || '';
+  const msg = '🔥 *OFERTA DEL DÍA — Líneas Fotocopias*\n' + svc + (pre ? ' a $' + pre : '') + ' ⏳\n👉 ' + link;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+
+// PWA Install
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBanner').classList.remove('hidden');
+});
+document.getElementById('btnInstall').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') document.getElementById('installBanner').classList.add('hidden');
+  deferredPrompt = null;
+});
+
+// Register SW
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+genLink();
+</script>
+</body>
+</html>
